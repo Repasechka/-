@@ -1,492 +1,541 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Таймер | Не останавливается</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0a0f1a 0%, #05070f 100%);
-            font-family: 'Segoe UI', 'Courier New', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .timer-container {
-            background: rgba(5, 15, 25, 0.75);
-            backdrop-filter: blur(14px);
-            border-radius: 3rem;
-            padding: 1.8rem 1.5rem 2rem;
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(0, 200, 255, 0.4);
-            width: 100%;
-            max-width: 1000px;
-        }
-        .timer-display {
-            background: #01070f;
-            padding: 1.8rem 1rem;
-            border-radius: 2rem;
-            text-align: center;
-            border: 1px solid #2a6f8f;
-            margin-bottom: 1.8rem;
-        }
-        .days-block {
-            font-size: clamp(2rem, 9vw, 4.2rem);
-            font-weight: 900;
-            background: linear-gradient(135deg, #ffe6b0, #ffbc6e);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: #ffcf8a;
-            text-shadow: 0 0 12px #ff9f2e;
-            margin-bottom: 10px;
-        }
-        .time-digits {
-            font-size: clamp(1.8rem, 8vw, 3.8rem);
-            font-weight: 800;
-            font-family: 'Monaco', 'Courier New', monospace;
-            color: #00f2ff;
-            text-shadow: 0 0 8px #00a6ff;
-            letter-spacing: 2px;
-        }
-        .unit-label {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-        .unit-label span {
-            background: #0f1f2c;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #b8defa;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem;
-            margin: 1.8rem 0 1.2rem;
-        }
-        button {
-            background: #111e2a;
-            border: none;
-            font-family: inherit;
-            font-weight: bold;
-            font-size: 1rem;
-            padding: 0.7rem 1.6rem;
-            border-radius: 3rem;
-            color: #cde5ff;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-            border-bottom: 2px solid #2f6f8a;
-        }
-        button:active { transform: scale(0.96); }
-        button.primary { background: #0f405a; border-bottom-color: #3cd0ff; color: white; }
-        button.warning { background: #3a2a1a; border-bottom-color: #da9430; }
-        .presets {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.6rem;
-            margin: 0.5rem 0 1rem;
-        }
-        .preset-btn {
-            background: #09212e;
-            font-size: 0.85rem;
-            padding: 0.45rem 1rem;
-            border-bottom-color: #3680a0;
-        }
-        .big-day { background: #1f3a2a; border-bottom-color: #e0a34b; }
-        .custom-panel {
-            background: #03121c60;
-            border-radius: 2rem;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        .custom-input {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            margin: 0.8rem 0;
-        }
-        .custom-input input {
-            background: #010f18;
-            border: 1px solid #2f7f9f;
-            padding: 0.6rem 0.8rem;
-            border-radius: 2.5rem;
-            width: 95px;
-            text-align: center;
-            color: #caf2ff;
-            font-family: monospace;
-            font-size: 1rem;
-            font-weight: bold;
-            outline: none;
-        }
-        .status-text {
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: #7d9cbb;
-        }
-        .share-section {
-            margin-top: 1rem;
-            text-align: center;
-            padding-top: 0.8rem;
-            border-top: 1px solid #2a4c6e;
-        }
-        .share-btn {
-            background: #1a4c3a;
-            border-bottom-color: #6fbf6f;
-            margin-top: 0.5rem;
-        }
-        .link-container {
-            margin-top: 0.8rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: center;
-            align-items: center;
-        }
-        .link-input {
-            background: #010f18;
-            border: 1px solid #2f7f9f;
-            padding: 0.6rem 1rem;
-            border-radius: 2rem;
-            color: #caf2ff;
-            font-family: monospace;
-            font-size: 0.8rem;
-            width: 70%;
-            min-width: 200px;
-            outline: none;
-            text-align: center;
-        }
-        .copy-btn {
-            background: #0f405a;
-            border-bottom-color: #3cd0ff;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.85rem;
-        }
-        footer { text-align: center; font-size: 0.7rem; margin-top: 1.2rem; color: #2f556b; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сетевой таймер</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --card: #111827;
+    --card-top: #1a2236;
+    --border: #1e293b;
+    --fg: #f0f4f8;
+    --muted: #64748b;
+    --accent: #10b981;
+    --accent-glow: rgba(16, 185, 129, 0.35);
+    --danger: #ef4444;
+    --warn: #f59e0b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+  .bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.25; animation: blobFloat 12s ease-in-out infinite alternate; }
+  .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -15%; left: -10%; }
+  .blob-2 { width: 400px; height: 400px; background: #f59e0b; bottom: -10%; right: -8%; animation-delay: -4s; opacity: 0.15; }
+  .blob-3 { width: 300px; height: 300px; background: #06b6d4; top: 50%; left: 60%; animation-delay: -8s; opacity: 0.12; }
+  @keyframes blobFloat { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(60px,-40px) scale(1.15); } }
+  .grid-pattern {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .container { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 30px 20px; width: 100%; max-width: 900px; }
+  .sync-bar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+    background: rgba(17,24,39,0.8); border: 1px solid var(--border);
+    border-radius: 50px; backdrop-filter: blur(12px); font-size: 13px; color: var(--muted);
+  }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); transition: background 0.4s; flex-shrink: 0; }
+  .sync-dot.ok { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+  .sync-dot.loading { background: var(--warn); animation: pulse 1s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .title { text-align: center; }
+  .title h1 { font-weight: 900; font-size: clamp(28px,5vw,44px); letter-spacing: -1px; line-height: 1.1; margin-bottom: 8px; }
+  .title h1 span { color: var(--accent); }
+  .title p { color: var(--muted); font-weight: 200; font-size: 16px; }
+  .timer-row { display: flex; gap: clamp(12px,3vw,24px); align-items: center; flex-wrap: wrap; justify-content: center; }
+  .flip-unit { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .flip-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--muted); }
+  .flip-card { position: relative; width: clamp(70px,15vw,120px); height: clamp(90px,18vw,150px); perspective: 600px; }
+  .flip-card-inner { position: relative; width: 100%; height: 100%; }
+  .flip-top, .flip-bottom { position: absolute; width: 100%; height: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .flip-top { top: 0; border-radius: 12px 12px 0 0; border-bottom: 1px solid rgba(0,0,0,0.4); background: var(--card-top); align-items: flex-end; }
+  .flip-top .digit { transform: translateY(50%); }
+  .flip-bottom { bottom: 0; border-radius: 0 0 12px 12px; background: var(--card); align-items: flex-start; }
+  .flip-bottom .digit { transform: translateY(-50%); }
+  .digit { font-weight: 900; font-size: clamp(40px,10vw,80px); line-height: 1; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .flip-panel-top {
+    position: absolute; top: 0; left: 0; width: 100%; height: 50%; overflow: hidden;
+    background: var(--card-top); border-radius: 12px 12px 0 0; border-bottom: 1px solid rgba(0,0,0,0.4);
+    transform-origin: bottom center; display: flex; align-items: flex-end; justify-content: center; z-index: 3; backface-visibility: hidden;
+  }
+  .flip-panel-top .digit { transform: translateY(50%); }
+  .flip-panel-bottom {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; overflow: hidden;
+    background: var(--card); border-radius: 0 0 12px 12px; transform-origin: top center;
+    transform: rotateX(90deg); display: flex; align-items: flex-start; justify-content: center; z-index: 3; backface-visibility: hidden;
+  }
+  .flip-panel-bottom .digit { transform: translateY(-50%); }
+  .flip-card.flipping .flip-panel-top { animation: flipDownTop 0.6s ease-in forwards; }
+  .flip-card.flipping .flip-panel-bottom { animation: flipDownBottom 0.6s ease-in 0.3s forwards; }
+  @keyframes flipDownTop { 0%{transform:rotateX(0deg)} 100%{transform:rotateX(-90deg)} }
+  @keyframes flipDownBottom { 0%{transform:rotateX(90deg)} 100%{transform:rotateX(0deg)} }
+  .flip-card::after { content:''; position: absolute; inset: 0; border-radius: 12px; background: linear-gradient(135deg,rgba(255,255,255,0.06) 0%,transparent 50%); pointer-events: none; z-index: 5; }
+  .flip-sep { display: flex; flex-direction: column; gap: 16px; padding-bottom: 28px; }
+  .flip-sep span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); animation: sepBlink 1s ease infinite; }
+  @keyframes sepBlink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .controls { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; max-width: 560px; }
+  .input-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+  .input-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+  .input-group input {
+    padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: rgba(17,24,39,0.8); color: var(--fg); font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 400; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+    color-scheme: dark;
+  }
+  .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .btn {
+    padding: 12px 28px; border-radius: 10px; border: none; font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.25s ease;
+    text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--accent); color: #0a0e17; box-shadow: 0 4px 20px var(--accent-glow); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px var(--accent-glow); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary { background: rgba(255,255,255,0.06); color: var(--fg); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--muted); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .preset-chip {
+    padding: 6px 14px; border-radius: 50px; border: 1px solid var(--border);
+    background: rgba(17,24,39,0.6); color: var(--muted); font-size: 12px; font-weight: 400;
+    cursor: pointer; transition: all 0.25s; font-family: 'Outfit', sans-serif;
+  }
+  .preset-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(16,185,129,0.08); }
+  .info-bar { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .info-bar span i { margin-right: 6px; color: var(--accent); font-size: 12px; }
+  .toast-container { position: fixed; top: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 10px; }
+  .toast {
+    padding: 14px 20px; border-radius: 10px; background: rgba(17,24,39,0.95);
+    border: 1px solid var(--border); backdrop-filter: blur(12px); font-size: 14px; color: var(--fg);
+    display: flex; align-items: center; gap: 10px; animation: toastIn 0.4s ease; max-width: 360px;
+  }
+  .toast.out { animation: toastOut 0.3s ease forwards; }
+  .toast i { font-size: 16px; flex-shrink: 0; }
+  .toast.success i { color: var(--accent); }
+  .toast.error i { color: var(--danger); }
+  .toast.warn i { color: var(--warn); }
+  @keyframes toastIn { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes toastOut { to{opacity:0;transform:translateX(40px)} }
+  .finished-overlay {
+    position: fixed; inset: 0; z-index: 100; background: rgba(10,14,23,0.92);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; animation: fadeIn 0.5s ease; backdrop-filter: blur(8px);
+  }
+  .finished-overlay .big-icon { font-size: 64px; color: var(--accent); animation: finishedPop 0.6s ease; }
+  .finished-overlay h2 { font-size: 36px; font-weight: 900; }
+  .finished-overlay p { color: var(--muted); font-size: 16px; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes finishedPop { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  .particles-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  @media (max-width: 500px) {
+    .flip-sep { gap: 10px; padding-bottom: 20px; }
+    .flip-sep span { width: 5px; height: 5px; }
+    .controls { padding: 0 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .blob, .flip-sep span { animation: none !important; }
+    .flip-card.flipping .flip-panel-top, .flip-card.flipping .flip-panel-bottom { animation: none !important; }
+  }
+</style>
 </head>
 <body>
-<div class="timer-container">
-    <div class="timer-display">
-        <div class="days-block" id="daysDisplay">-- дней</div>
-        <div class="time-digits" id="timerDisplay">--:--:--</div>
-        <div class="unit-label">
-            <span>ДНИ</span><span>ЧАСЫ</span><span>МИНУТЫ</span><span>СЕКУНДЫ</span>
-        </div>
-    </div>
 
-    <div class="controls">
-        <button id="startBtn" class="primary">▶ СТАРТ</button>
-        <button id="pauseBtn">⏸ ПАУЗА</button>
-        <button id="resetBtn" class="warning">⟳ СБРОС</button>
-    </div>
-
-    <div class="presets">
-        <button class="preset-btn" data-days="0" data-hours="0" data-mins="1">1 мин</button>
-        <button class="preset-btn" data-days="0" data-hours="0" data-mins="5">5 мин</button>
-        <button class="preset-btn" data-days="0" data-hours="1" data-mins="0">1 час</button>
-        <button class="preset-btn" data-days="1" data-hours="0" data-mins="0">1 день</button>
-        <button class="preset-btn" data-days="7" data-hours="0" data-mins="0">7 дней</button>
-        <button class="preset-btn" data-days="30" data-hours="0" data-mins="0">30 дней</button>
-        <button class="preset-btn big-day" data-days="150" data-hours="0" data-mins="0">🔥 150 дней</button>
-        <button class="preset-btn" data-days="365" data-hours="0" data-mins="0">365 дней</button>
-    </div>
-
-    <div class="custom-panel">
-        <div class="custom-input">
-            <input type="number" id="customDays" placeholder="Дни" min="0" value="150">
-            <input type="number" id="customHours" placeholder="Часы" min="0" max="23" value="0">
-            <input type="number" id="customMinutes" placeholder="Мин" min="0" max="59" value="0">
-            <input type="number" id="customSeconds" placeholder="Сек" min="0" max="59" value="0">
-            <button id="setCustomBtn" class="preset-btn">УСТАНОВИТЬ</button>
-        </div>
-        <div class="status-text" id="statusMsg">⚡ Таймер готов</div>
-    </div>
-
-    <div class="share-section">
-        <button id="generateLinkBtn" class="share-btn">🔗 СГЕНЕРИРОВАТЬ ССЫЛКУ</button>
-        <div id="linkContainer" class="link-container" style="display: none;">
-            <input type="text" id="shareLink" class="link-input" readonly>
-            <button id="copyLinkBtn" class="copy-btn">📋 КОПИРОВАТЬ</button>
-        </div>
-    </div>
-    <footer>⏱️ Таймер не останавливается. Ссылка передаёт установленное время.</footer>
+<div class="bg-layer">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
 </div>
+<div class="grid-pattern"></div>
+<canvas class="particles-canvas" id="particlesCanvas"></canvas>
+<div class="toast-container" id="toastContainer"></div>
+
+<main class="container">
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">Ожидание синхронизации...</span>
+  </div>
+
+  <div class="title">
+    <h1>Сетевой <span>таймер</span></h1>
+    <p>Точное время из интернета — обратный отсчёт</p>
+  </div>
+
+  <div class="timer-row">
+    <div class="flip-unit">
+      <div class="flip-card" id="flipDays">
+        <div class="flip-card-inner">
+          <div class="flip-top"><span class="digit" id="daysTop">00</span></div>
+          <div class="flip-bottom"><span class="digit" id="daysBot">00</span></div>
+          <div class="flip-panel-top"><span class="digit" id="daysPanelTop">00</span></div>
+          <div class="flip-panel-bottom"><span class="digit" id="daysPanelBot">00</span></div>
+        </div>
+      </div>
+      <span class="flip-label">Дни</span>
+    </div>
+    <div class="flip-sep"><span></span><span></span></div>
+    <div class="flip-unit">
+      <div class="flip-card" id="flipHours">
+        <div class="flip-card-inner">
+          <div class="flip-top"><span class="digit" id="hoursTop">00</span></div>
+          <div class="flip-bottom"><span class="digit" id="hoursBot">00</span></div>
+          <div class="flip-panel-top"><span class="digit" id="hoursPanelTop">00</span></div>
+          <div class="flip-panel-bottom"><span class="digit" id="hoursPanelBot">00</span></div>
+        </div>
+      </div>
+      <span class="flip-label">Часы</span>
+    </div>
+    <div class="flip-sep"><span></span><span></span></div>
+    <div class="flip-unit">
+      <div class="flip-card" id="flipMins">
+        <div class="flip-card-inner">
+          <div class="flip-top"><span class="digit" id="minsTop">00</span></div>
+          <div class="flip-bottom"><span class="digit" id="minsBot">00</span></div>
+          <div class="flip-panel-top"><span class="digit" id="minsPanelTop">00</span></div>
+          <div class="flip-panel-bottom"><span class="digit" id="minsPanelBot">00</span></div>
+        </div>
+      </div>
+      <span class="flip-label">Минуты</span>
+    </div>
+    <div class="flip-sep"><span></span><span></span></div>
+    <div class="flip-unit">
+      <div class="flip-card" id="flipSecs">
+        <div class="flip-card-inner">
+          <div class="flip-top"><span class="digit" id="secsTop">00</span></div>
+          <div class="flip-bottom"><span class="digit" id="secsBot">00</span></div>
+          <div class="flip-panel-top"><span class="digit" id="secsPanelTop">00</span></div>
+          <div class="flip-panel-bottom"><span class="digit" id="secsPanelBot">00</span></div>
+        </div>
+      </div>
+      <span class="flip-label">Секунды</span>
+    </div>
+  </div>
+
+  <div class="presets">
+    <button class="preset-chip" data-minutes="1">1 минута</button>
+    <button class="preset-chip" data-minutes="5">5 минут</button>
+    <button class="preset-chip" data-minutes="15">15 минут</button>
+    <button class="preset-chip" data-minutes="30">30 минут</button>
+    <button class="preset-chip" data-minutes="60">1 час</button>
+    <button class="preset-chip" data-minutes="1440">1 сутки</button>
+    <button class="preset-chip" data-preset="newyear">Новый год</button>
+  </div>
+
+  <div class="controls">
+    <div class="input-row">
+      <div class="input-group">
+        <label for="inputDate">Дата</label>
+        <input type="date" id="inputDate">
+      </div>
+      <div class="input-group">
+        <label for="inputTime">Время</label>
+        <input type="time" id="inputTime">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnStart"><i class="fas fa-play"></i> Запустить</button>
+      <button class="btn btn-secondary" id="btnSync"><i class="fas fa-sync-alt"></i> Синхронизация</button>
+      <button class="btn btn-danger" id="btnStop"><i class="fas fa-stop"></i> Сброс</button>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <span><i class="fas fa-globe"></i> Сервер: <span id="serverName">—</span></span>
+    <span><i class="fas fa-clock"></i> Смещение: <span id="offsetVal">—</span></span>
+    <span><i class="fas fa-satellite-dish"></i> Последний запрос: <span id="lastSyncTime">—</span></span>
+  </div>
+</main>
 
 <script>
-    // === ДОМ ЭЛЕМЕНТЫ ===
-    const daysSpan = document.getElementById('daysDisplay');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const startBtn = document.getElementById('startBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const presetBtns = document.querySelectorAll('.preset-btn');
-    const setCustomBtn = document.getElementById('setCustomBtn');
-    const customDays = document.getElementById('customDays');
-    const customHours = document.getElementById('customHours');
-    const customMinutes = document.getElementById('customMinutes');
-    const customSeconds = document.getElementById('customSeconds');
-    const statusSpan = document.getElementById('statusMsg');
-    const generateLinkBtn = document.getElementById('generateLinkBtn');
-    const linkContainer = document.getElementById('linkContainer');
-    const shareLink = document.getElementById('shareLink');
-    const copyLinkBtn = document.getElementById('copyLinkBtn');
+(function() {
+  'use strict';
 
-    // === СОСТОЯНИЕ ===
-    let savedTotalSeconds = 150 * 86400;   // установленное (базовое) время в секундах
-    let endTime = null;                    // метка окончания (Unix seconds)
-    let isRunning = false;
-    let timerInterval = null;
+  // === Состояние ===
+  var timeOffset = 0;
+  var targetTimestamp = null;
+  var timerInterval = null;
+  var syncInProgress = false;
+  var finished = false;
 
-    // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
-    function formatTime(seconds) {
-        if (seconds < 0) seconds = 0;
-        const days = Math.floor(seconds / 86400);
-        const hours = Math.floor((seconds % 86400) / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        let dayWord = "дней";
-        if (days % 10 === 1 && days % 100 !== 11) dayWord = "день";
-        else if ([2,3,4].includes(days % 10) && ![12,13,14].includes(days % 100)) dayWord = "дня";
-        daysSpan.innerText = `${days} ${dayWord}`;
-        timerDisplay.innerText = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+  // === DOM-элементы (уникальные имена, без конфликтов) ===
+  var syncDot = document.getElementById('syncDot');
+  var syncText = document.getElementById('syncText');
+  var serverNameEl = document.getElementById('serverName');
+  var offsetValEl = document.getElementById('offsetVal');
+  var lastSyncEl = document.getElementById('lastSyncTime');
+  var inputDateEl = document.getElementById('inputDate');
+  var inputTimeEl = document.getElementById('inputTime');
+
+  // === Тосты ===
+  function showToast(msg, type) {
+    type = type || 'success';
+    var container = document.getElementById('toastContainer');
+    var iconMap = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warn: 'fa-exclamation-triangle' };
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.innerHTML = '<i class="fas ' + (iconMap[type] || iconMap.success) + '"></i><span>' + msg + '</span>';
+    container.appendChild(toast);
+    setTimeout(function() {
+      toast.classList.add('out');
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 3500);
+  }
+
+  // === Синхронизация по интернету ===
+  var apis = [
+    {
+      name: 'timeapi.io',
+      url: 'https://timeapi.io/api/time/current/zone?timeZone=UTC',
+      parse: function(data) { return new Date(data.dateTime + 'Z').getTime(); }
+    },
+    {
+      name: 'WorldTimeAPI',
+      url: 'https://worldtimeapi.org/api/timezone/Etc/UTC',
+      parse: function(data) { return new Date(data.utc_datetime).getTime(); }
+    }
+  ];
+
+  async function syncTime() {
+    if (syncInProgress) return;
+    syncInProgress = true;
+    syncDot.className = 'sync-dot loading';
+    syncText.textContent = 'Синхронизация...';
+    var ok = false;
+
+    for (var i = 0; i < apis.length; i++) {
+      var api = apis[i];
+      try {
+        var ctrl = new AbortController();
+        var timer = setTimeout(function() { ctrl.abort(); }, 5000);
+        var resp = await fetch(api.url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+        var serverMs = api.parse(data);
+        var before = Date.now();
+        var after = Date.now();
+        timeOffset = serverMs - before + (after - before) / 2;
+
+        serverNameEl.textContent = api.name;
+        offsetValEl.textContent = (timeOffset > 0 ? '+' : '') + Math.round(timeOffset) + ' мс';
+        lastSyncEl.textContent = new Date().toLocaleTimeString('ru-RU');
+        syncDot.className = 'sync-dot ok';
+        syncText.textContent = 'Синхронизировано (' + api.name + ')';
+        ok = true;
+        showToast('Синхронизировано: ' + api.name + ', смещение ' + Math.round(timeOffset) + ' мс', 'success');
+        break;
+      } catch (e) {
+        console.warn(api.name + ': ' + e.message);
+      }
     }
 
-    function getRemaining() {
-        if (!endTime) return 0;
-        const now = Math.floor(Date.now() / 1000);
-        return Math.max(0, endTime - now);
+    if (!ok) {
+      syncDot.className = 'sync-dot';
+      syncText.textContent = 'Серверы недоступны — локальное время';
+      showToast('Не удалось получить время. Используется локальное.', 'error');
     }
+    syncInProgress = false;
+  }
 
-    function updateDisplayFromState() {
-        if (isRunning && endTime) {
-            formatTime(getRemaining());
-            if (getRemaining() === 0) {
-                stopTimer();
-                statusSpan.innerText = "🔔 ВРЕМЯ ВЫШЛО! 🔔";
-            }
-        } else if (endTime) {
-            formatTime(getRemaining());
-        } else {
-            formatTime(savedTotalSeconds);
-        }
+  function getNow() { return Date.now() + timeOffset; }
+
+  // === Flip-анимация ===
+  function flipUnit(cardId, newVal, prefix) {
+    var card = document.getElementById(cardId);
+    var topEl = document.getElementById(prefix + 'Top');
+    var botEl = document.getElementById(prefix + 'Bot');
+    var ptEl = document.getElementById(prefix + 'PanelTop');
+    var pbEl = document.getElementById(prefix + 'PanelBot');
+    var old = botEl.textContent;
+    if (old === newVal) return;
+    pbEl.textContent = newVal;
+    ptEl.textContent = old;
+    card.classList.remove('flipping');
+    void card.offsetWidth;
+    card.classList.add('flipping');
+    setTimeout(function() { topEl.textContent = newVal; botEl.textContent = newVal; }, 300);
+    setTimeout(function() { card.classList.remove('flipping'); }, 700);
+  }
+
+  // === Обновление таймера ===
+  function updateTimer() {
+    if (!targetTimestamp || finished) return;
+    var diff = targetTimestamp - getNow();
+    if (diff <= 0) {
+      diff = 0; finished = true;
+      clearInterval(timerInterval);
+      flipUnit('flipDays', '00', 'days');
+      flipUnit('flipHours', '00', 'hours');
+      flipUnit('flipMins', '00', 'mins');
+      flipUnit('flipSecs', '00', 'secs');
+      showFinished();
+      return;
     }
+    var sec = Math.floor(diff / 1000);
+    var d = String(Math.floor(sec / 86400)).padStart(2, '0');
+    var h = String(Math.floor((sec % 86400) / 3600)).padStart(2, '0');
+    var m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+    var s = String(sec % 60).padStart(2, '0');
+    flipUnit('flipDays', d, 'days');
+    flipUnit('flipHours', h, 'hours');
+    flipUnit('flipMins', m, 'mins');
+    flipUnit('flipSecs', s, 'secs');
+  }
 
-    // === СОХРАНЕНИЕ В LOCALSTORAGE ===
-    function saveState() {
-        const state = {
-            savedTotalSeconds: savedTotalSeconds,
-            endTime: endTime,
-            isRunning: isRunning
-        };
-        localStorage.setItem('timerState', JSON.stringify(state));
-    }
+  // === Экран завершения ===
+  function showFinished() {
+    var ov = document.createElement('div');
+    ov.className = 'finished-overlay';
+    ov.innerHTML =
+      '<div class="big-icon"><i class="fas fa-check-circle"></i></div>' +
+      '<h2>Время вышло</h2><p>Обратный отсчёт завершён</p>' +
+      '<button class="btn btn-primary" id="btnCloseFin"><i class="fas fa-redo"></i> Начать заново</button>';
+    document.body.appendChild(ov);
+    document.getElementById('btnCloseFin').addEventListener('click', function() { ov.remove(); resetTimer(); });
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99, 1046.5].forEach(function(f, i) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.5);
+        o.connect(g).connect(ctx.destination);
+        o.start(ctx.currentTime + i * 0.15);
+        o.stop(ctx.currentTime + i * 0.15 + 0.5);
+      });
+    } catch (e) {}
+  }
 
-    function loadState() {
-        const raw = localStorage.getItem('timerState');
-        if (!raw) return false;
-        try {
-            const state = JSON.parse(raw);
-            savedTotalSeconds = state.savedTotalSeconds;
-            endTime = state.endTime;
-            isRunning = state.isRunning;
-            // если время уже вышло, сбрасываем флаг
-            if (isRunning && endTime && getRemaining() <= 0) {
-                isRunning = false;
-                endTime = null;
-                saveState();
-            }
-            return true;
-        } catch(e) { return false; }
-    }
+  // === Надёжный парсинг даты/времени ===
+  function parseDateTime(dateStr, timeStr) {
+    if (!dateStr || !timeStr) return null;
+    var dp = dateStr.split('-');
+    if (dp.length !== 3) return null;
+    var yr = parseInt(dp[0], 10), mo = parseInt(dp[1], 10) - 1, dy = parseInt(dp[2], 10);
+    if (isNaN(yr) || isNaN(mo) || isNaN(dy)) return null;
+    var tp = timeStr.split(':');
+    var hr = parseInt(tp[0], 10) || 0, mn = parseInt(tp[1], 10) || 0, sc = parseInt(tp[2], 10) || 0;
+    if (isNaN(hr) || isNaN(mn)) return null;
+    var d = new Date(yr, mo, dy, hr, mn, sc, 0);
+    return isNaN(d.getTime()) ? null : d.getTime();
+  }
 
-    // === УСТАНОВКА НОВОГО ВРЕМЕНИ (сохраняем базовое) ===
-    function setNewTime(days, hours, minutes, seconds, fromUrl = false) {
-        let total = (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
-        if (total < 1) total = 1;
-        savedTotalSeconds = total;
-        const now = Math.floor(Date.now() / 1000);
-        endTime = now + total;
-        isRunning = false;  // по умолчанию ставим на паузу
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-        updateDisplayFromState();
-        saveState();
-        // обновляем поля ввода
-        customDays.value = days;
-        customHours.value = hours;
-        customMinutes.value = minutes;
-        customSeconds.value = seconds;
-        if (!fromUrl) {
-            statusSpan.innerText = `✓ установлено: ${days}д ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-        }
-    }
+  function fmtDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function fmtTime(d) {
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
 
-    // === УПРАВЛЕНИЕ ТАЙМЕРОМ ===
-    function startTimer() {
-        if (isRunning) return;
-        let remaining = getRemaining();
-        if (remaining <= 0) {
-            statusSpan.innerText = "⛔ время вышло, установите новое";
-            return;
-        }
-        if (!endTime) {
-            const now = Math.floor(Date.now() / 1000);
-            endTime = now + remaining;
-        }
-        isRunning = true;
-        saveState();
-        statusSpan.innerText = "▶ таймер запущен";
-    }
+  // === Запуск ===
+  function startTimer() {
+    var dv = inputDateEl.value;
+    var tv = inputTimeEl.value;
+    if (!dv || !tv) { showToast('Укажите дату и время', 'warn'); return; }
+    var ts = parseDateTime(dv, tv);
+    if (ts === null) { showToast('Некорректная дата или время', 'error'); return; }
+    targetTimestamp = ts;
+    finished = false;
+    if (timerInterval) clearInterval(timerInterval);
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 200);
+    showToast('Таймер запущен: ' + new Date(ts).toLocaleString('ru-RU'), 'success');
+  }
 
-    function pauseTimer() {
-        if (!isRunning) {
-            statusSpan.innerText = "⏸ таймер не активен";
-            return;
-        }
-        // сохраняем оставшееся время в endTime для паузы
-        const remaining = getRemaining();
-        if (remaining > 0) {
-            const now = Math.floor(Date.now() / 1000);
-            endTime = now + remaining;
-        } else {
-            endTime = null;
-        }
-        isRunning = false;
-        saveState();
-        updateDisplayFromState();
-        statusSpan.innerText = "⏸ пауза";
-    }
-
-    function resetTimer() {
-        if (timerInterval) clearInterval(timerInterval);
-        const now = Math.floor(Date.now() / 1000);
-        endTime = now + savedTotalSeconds;
-        isRunning = false;
-        timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-        updateDisplayFromState();
-        saveState();
-        const days = Math.floor(savedTotalSeconds / 86400);
-        const hours = Math.floor((savedTotalSeconds % 86400) / 3600);
-        const minutes = Math.floor((savedTotalSeconds % 3600) / 60);
-        const secs = savedTotalSeconds % 60;
-        customDays.value = days;
-        customHours.value = hours;
-        customMinutes.value = minutes;
-        customSeconds.value = secs;
-        statusSpan.innerText = `⟳ сброс к ${days}д ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-    }
-
-    function stopTimer() {
-        isRunning = false;
-        endTime = null;
-        saveState();
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-        updateDisplayFromState();
-    }
-
-    // === ССЫЛКА ===
-    function generateShareLink() {
-        const days = Math.floor(savedTotalSeconds / 86400);
-        const hours = Math.floor((savedTotalSeconds % 86400) / 3600);
-        const minutes = Math.floor((savedTotalSeconds % 3600) / 60);
-        const secs = savedTotalSeconds % 60;
-        const url = `${window.location.origin}${window.location.pathname}?d=${days}&h=${hours}&m=${minutes}&s=${secs}`;
-        shareLink.value = url;
-        linkContainer.style.display = "flex";
-        statusSpan.innerText = "🔗 ссылка готова! Отправь другу — время сохранится";
-    }
-
-    function copyLink() {
-        shareLink.select();
-        document.execCommand('copy');
-        statusSpan.innerText = "✅ ссылка скопирована!";
-    }
-
-    // === ЗАГРУЗКА ИЗ URL ИЛИ LOCALSTORAGE ===
-    function initialize() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const d = parseInt(urlParams.get('d'));
-        const h = parseInt(urlParams.get('h'));
-        const m = parseInt(urlParams.get('m'));
-        const s = parseInt(urlParams.get('s'));
-        if (!isNaN(d) && !isNaN(h) && !isNaN(m) && !isNaN(s)) {
-            setNewTime(d, h, m, s, true);
-            statusSpan.innerText = `📦 загружено из ссылки: ${d}д ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-            return;
-        }
-        if (loadState()) {
-            if (!endTime) {
-                const now = Math.floor(Date.now() / 1000);
-                endTime = now + savedTotalSeconds;
-            }
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-            updateDisplayFromState();
-            const days = Math.floor(savedTotalSeconds / 86400);
-            const hours = Math.floor((savedTotalSeconds % 86400) / 3600);
-            const minutes = Math.floor((savedTotalSeconds % 3600) / 60);
-            const secs = savedTotalSeconds % 60;
-            customDays.value = days;
-            customHours.value = hours;
-            customMinutes.value = minutes;
-            customSeconds.value = secs;
-            statusSpan.innerText = isRunning ? "▶ таймер идёт" : "⏸ таймер на паузе";
-            return;
-        }
-        // по умолчанию 150 дней
-        setNewTime(150, 0, 0, 0, true);
-        statusSpan.innerText = "🔥 готов | таймер на 150 дней";
-    }
-
-    // === НАВЕШИВАЕМ СОБЫТИЯ ===
-    startBtn.onclick = startTimer;
-    pauseBtn.onclick = pauseTimer;
-    resetBtn.onclick = resetTimer;
-    generateLinkBtn.onclick = generateShareLink;
-    copyLinkBtn.onclick = copyLink;
-
-    presetBtns.forEach(btn => {
-        btn.onclick = () => {
-            const days = parseInt(btn.getAttribute('data-days')) || 0;
-            const hours = parseInt(btn.getAttribute('data-hours')) || 0;
-            const mins = parseInt(btn.getAttribute('data-mins')) || 0;
-            setNewTime(days, hours, mins, 0);
-        };
+  // === Сброс ===
+  function resetTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    targetTimestamp = null;
+    finished = false;
+    ['days','hours','mins','secs'].forEach(function(p) {
+      ['Top','Bot','PanelTop','PanelBot'].forEach(function(s) {
+        document.getElementById(p + s).textContent = '00';
+      });
     });
+    inputDateEl.value = '';
+    inputTimeEl.value = '';
+    showToast('Таймер сброшен', 'warn');
+  }
 
-    setCustomBtn.onclick = () => {
-        let days = parseInt(customDays.value) || 0;
-        let hours = parseInt(customHours.value) || 0;
-        let mins = parseInt(customMinutes.value) || 0;
-        let secs = parseInt(customSeconds.value) || 0;
-        if (days === 0 && hours === 0 && mins === 0 && secs === 0) {
-            statusSpan.innerText = "❌ задайте время больше нуля";
-            return;
-        }
-        setNewTime(days, hours, mins, secs);
-    };
+  // === Пресеты ===
+  document.querySelectorAll('.preset-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      var mins = chip.dataset.minutes;
+      if (mins) {
+        var now = new Date(getNow());
+        now.setMinutes(now.getMinutes() + parseInt(mins, 10));
+        inputDateEl.value = fmtDate(now);
+        inputTimeEl.value = fmtTime(now);
+        showToast('Установлено: ' + chip.textContent.trim(), 'success');
+        return;
+      }
+      if (chip.dataset.preset === 'newyear') {
+        var n = new Date(getNow());
+        var y = n.getFullYear() + 1;
+        var ny = new Date(y, 0, 1, 0, 0, 0, 0);
+        if (ny.getTime() - getNow() <= 0) { y++; ny = new Date(y, 0, 1, 0, 0, 0, 0); }
+        inputDateEl.value = fmtDate(ny);
+        inputTimeEl.value = fmtTime(ny);
+        showToast('Новый год ' + y, 'success');
+      }
+    });
+  });
 
-    // запуск
-    initialize();
+  // === Кнопки ===
+  document.getElementById('btnStart').addEventListener('click', startTimer);
+  document.getElementById('btnStop').addEventListener('click', resetTimer);
+  document.getElementById('btnSync').addEventListener('click', syncTime);
+
+  // === Частицы ===
+  (function() {
+    var c = document.getElementById('particlesCanvas');
+    var ctx = c.getContext('2d');
+    var w, h, pts = [];
+    function resize() { w = c.width = window.innerWidth; h = c.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    for (var i = 0; i < 50; i++) {
+      pts.push({ x: Math.random()*800, y: Math.random()*600, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3, r:Math.random()*2+0.5, a:Math.random()*0.4+0.1 });
+    }
+    function draw() {
+      ctx.clearRect(0,0,w,h);
+      for (var i=0;i<pts.length;i++) {
+        var p=pts[i]; p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=w; if(p.x>w)p.x=0; if(p.y<0)p.y=h; if(p.y>h)p.y=0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(0.5,p.r),0,Math.PI*2);
+        ctx.fillStyle='rgba(16,185,129,'+p.a+')'; ctx.fill();
+      }
+      for (var i=0;i<pts.length;i++) for (var j=i+1;j<pts.length;j++) {
+        var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+        ctx.strokeStyle='rgba(16,185,129,'+(0.06*(1-d/120))+')';ctx.lineWidth=0.5;ctx.stroke();}
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // === Автозапуск ===
+  syncTime();
+  setInterval(syncTime, 300000);
+
+})();
 </script>
 </body>
 </html>
