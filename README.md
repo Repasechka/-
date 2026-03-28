@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Таймер | Не останавливается</title>
+    <title>Таймер | Синхронизация по ссылке</title>
     <style>
         * {
             margin: 0;
@@ -221,17 +221,17 @@
     </div>
 
     <div class="share-section">
-        <button id="generateLinkBtn" class="share-btn">🔗 СГЕНЕРИРОВАТЬ ССЫЛКУ</button>
+        <button id="generateLinkBtn" class="share-btn">🔗 СГЕНЕРИРОВАТЬ ССЫЛКУ (с текущим состоянием)</button>
         <div id="linkContainer" class="link-container" style="display: none;">
             <input type="text" id="shareLink" class="link-input" readonly>
             <button id="copyLinkBtn" class="copy-btn">📋 КОПИРОВАТЬ</button>
         </div>
     </div>
-    <footer>⏱️ Таймер не останавливается. Ссылка передаёт установленное время.</footer>
+    <footer>⏱️ Таймер не останавливается. Ссылка передаёт точное состояние (оставшееся время и запуск).</footer>
 </div>
 
 <script>
-    // === ДОМ ЭЛЕМЕНТЫ ===
+    // ========== ЭЛЕМЕНТЫ ==========
     const daysSpan = document.getElementById('daysDisplay');
     const timerDisplay = document.getElementById('timerDisplay');
     const startBtn = document.getElementById('startBtn');
@@ -249,13 +249,13 @@
     const shareLink = document.getElementById('shareLink');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
 
-    // === СОСТОЯНИЕ ===
-    let savedTotalSeconds = 150 * 86400;   // установленное (базовое) время в секундах
-    let endTime = null;                    // метка окончания (Unix seconds)
+    // ========== СОСТОЯНИЕ ==========
+    let savedTotalSeconds = 150 * 86400;   // установленное время (для сброса)
+    let endTime = null;                   // unix-секунда окончания
     let isRunning = false;
     let timerInterval = null;
 
-    // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
     function formatTime(seconds) {
         if (seconds < 0) seconds = 0;
         const days = Math.floor(seconds / 86400);
@@ -275,7 +275,7 @@
         return Math.max(0, endTime - now);
     }
 
-    function updateDisplayFromState() {
+    function updateDisplay() {
         if (isRunning && endTime) {
             formatTime(getRemaining());
             if (getRemaining() === 0) {
@@ -289,7 +289,17 @@
         }
     }
 
-    // === СОХРАНЕНИЕ В LOCALSTORAGE ===
+    function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        isRunning = false;
+        endTime = null;
+        saveState();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(updateDisplay, 1000);
+        updateDisplay();
+    }
+
+    // ========== СОХРАНЕНИЕ В LOCALSTORAGE ==========
     function saveState() {
         const state = {
             savedTotalSeconds: savedTotalSeconds,
@@ -307,7 +317,6 @@
             savedTotalSeconds = state.savedTotalSeconds;
             endTime = state.endTime;
             isRunning = state.isRunning;
-            // если время уже вышло, сбрасываем флаг
             if (isRunning && endTime && getRemaining() <= 0) {
                 isRunning = false;
                 endTime = null;
@@ -317,29 +326,41 @@
         } catch(e) { return false; }
     }
 
-    // === УСТАНОВКА НОВОГО ВРЕМЕНИ (сохраняем базовое) ===
-    function setNewTime(days, hours, minutes, seconds, fromUrl = false) {
+    // ========== УСТАНОВКА НОВОГО ВРЕМЕНИ ==========
+    function setNewTime(days, hours, minutes, seconds, fromUrl = false, remainingSeconds = null, running = false) {
         let total = (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
         if (total < 1) total = 1;
         savedTotalSeconds = total;
+
         const now = Math.floor(Date.now() / 1000);
-        endTime = now + total;
-        isRunning = false;  // по умолчанию ставим на паузу
+        if (remainingSeconds !== null && remainingSeconds > 0) {
+            // восстанавливаем точное состояние из ссылки
+            endTime = now + remainingSeconds;
+            isRunning = running;
+        } else {
+            // обычная установка: ставим на паузу с полным временем
+            endTime = now + total;
+            isRunning = false;
+        }
+
         if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-        updateDisplayFromState();
+        timerInterval = setInterval(updateDisplay, 1000);
+        updateDisplay();
         saveState();
-        // обновляем поля ввода
+
         customDays.value = days;
         customHours.value = hours;
         customMinutes.value = minutes;
         customSeconds.value = seconds;
+
         if (!fromUrl) {
             statusSpan.innerText = `✓ установлено: ${days}д ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+        } else {
+            statusSpan.innerText = `📦 загружено из ссылки: ${days}д ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')} | ${isRunning ? "идет" : "пауза"}`;
         }
     }
 
-    // === УПРАВЛЕНИЕ ТАЙМЕРОМ ===
+    // ========== УПРАВЛЕНИЕ ==========
     function startTimer() {
         if (isRunning) return;
         let remaining = getRemaining();
@@ -361,7 +382,6 @@
             statusSpan.innerText = "⏸ таймер не активен";
             return;
         }
-        // сохраняем оставшееся время в endTime для паузы
         const remaining = getRemaining();
         if (remaining > 0) {
             const now = Math.floor(Date.now() / 1000);
@@ -371,18 +391,16 @@
         }
         isRunning = false;
         saveState();
-        updateDisplayFromState();
+        updateDisplay();
         statusSpan.innerText = "⏸ пауза";
     }
 
     function resetTimer() {
-        if (timerInterval) clearInterval(timerInterval);
         const now = Math.floor(Date.now() / 1000);
         endTime = now + savedTotalSeconds;
         isRunning = false;
-        timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-        updateDisplayFromState();
         saveState();
+        updateDisplay();
         const days = Math.floor(savedTotalSeconds / 86400);
         const hours = Math.floor((savedTotalSeconds % 86400) / 3600);
         const minutes = Math.floor((savedTotalSeconds % 3600) / 60);
@@ -394,25 +412,20 @@
         statusSpan.innerText = `⟳ сброс к ${days}д ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
     }
 
-    function stopTimer() {
-        isRunning = false;
-        endTime = null;
-        saveState();
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-        updateDisplayFromState();
-    }
-
-    // === ССЫЛКА ===
+    // ========== ГЕНЕРАЦИЯ ССЫЛКИ (передаём всё состояние) ==========
     function generateShareLink() {
+        // текущее оставшееся время
+        let remaining = getRemaining();
+        if (remaining <= 0) remaining = savedTotalSeconds; // если время вышло, используем установленное
         const days = Math.floor(savedTotalSeconds / 86400);
         const hours = Math.floor((savedTotalSeconds % 86400) / 3600);
         const minutes = Math.floor((savedTotalSeconds % 3600) / 60);
         const secs = savedTotalSeconds % 60;
-        const url = `${window.location.origin}${window.location.pathname}?d=${days}&h=${hours}&m=${minutes}&s=${secs}`;
+        // добавляем параметры: установленное время (d,h,m,s), оставшееся (r), запущен (run)
+        const url = `${window.location.origin}${window.location.pathname}?d=${days}&h=${hours}&m=${minutes}&s=${secs}&r=${Math.floor(remaining)}&run=${isRunning ? 1 : 0}`;
         shareLink.value = url;
         linkContainer.style.display = "flex";
-        statusSpan.innerText = "🔗 ссылка готова! Отправь другу — время сохранится";
+        statusSpan.innerText = "🔗 ссылка готова! Отправь другу — состояние сохранится";
     }
 
     function copyLink() {
@@ -421,26 +434,36 @@
         statusSpan.innerText = "✅ ссылка скопирована!";
     }
 
-    // === ЗАГРУЗКА ИЗ URL ИЛИ LOCALSTORAGE ===
-    function initialize() {
+    // ========== ЗАГРУЗКА ИЗ URL ==========
+    function loadFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
         const d = parseInt(urlParams.get('d'));
         const h = parseInt(urlParams.get('h'));
         const m = parseInt(urlParams.get('m'));
         const s = parseInt(urlParams.get('s'));
+        const r = parseInt(urlParams.get('r'));
+        const run = parseInt(urlParams.get('run'));
         if (!isNaN(d) && !isNaN(h) && !isNaN(m) && !isNaN(s)) {
-            setNewTime(d, h, m, s, true);
-            statusSpan.innerText = `📦 загружено из ссылки: ${d}д ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-            return;
+            let remaining = (!isNaN(r) && r > 0) ? r : null;
+            let running = (run === 1);
+            setNewTime(d, h, m, s, true, remaining, running);
+            return true;
         }
+        return false;
+    }
+
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    function initialize() {
+        if (loadFromURL()) return;
         if (loadState()) {
+            // восстановили из localStorage
             if (!endTime) {
                 const now = Math.floor(Date.now() / 1000);
                 endTime = now + savedTotalSeconds;
             }
             if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => updateDisplayFromState(), 1000);
-            updateDisplayFromState();
+            timerInterval = setInterval(updateDisplay, 1000);
+            updateDisplay();
             const days = Math.floor(savedTotalSeconds / 86400);
             const hours = Math.floor((savedTotalSeconds % 86400) / 3600);
             const minutes = Math.floor((savedTotalSeconds % 3600) / 60);
@@ -453,11 +476,11 @@
             return;
         }
         // по умолчанию 150 дней
-        setNewTime(150, 0, 0, 0, true);
+        setNewTime(150, 0, 0, 0, false);
         statusSpan.innerText = "🔥 готов | таймер на 150 дней";
     }
 
-    // === НАВЕШИВАЕМ СОБЫТИЯ ===
+    // ========== ОБРАБОТЧИКИ ==========
     startBtn.onclick = startTimer;
     pauseBtn.onclick = pauseTimer;
     resetBtn.onclick = resetTimer;
@@ -485,7 +508,6 @@
         setNewTime(days, hours, mins, secs);
     };
 
-    // запуск
     initialize();
 </script>
 </body>
